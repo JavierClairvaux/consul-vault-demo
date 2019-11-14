@@ -1,0 +1,6 @@
+{
+  "service": {
+    "name": "telegraf",
+    "port": 8125
+  }
+}

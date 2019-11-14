@@ -1,0 +1,20 @@
+{
+  "server": false,
+  "node_name" : "vault-client1",
+  "bind_addr": "192.168.10.122",
+  "datacenter": "dc-0",
+  "data_dir": "/opt/consul",
+  "domain": "consul",
+  "enable_script_checks": true,
+  "enable_syslog": true,
+  "encrypt": "EV0be+9N8kaJca9EddKJTCgO/cj6HZqfhkMMgzzAQjQ=",
+  "leave_on_terminate": true,
+  "log_level": "DEBUG",
+  "rejoin_after_leave": true,
+  "start_join": [
+      "192.168.9.91"
+  ],
+  "ports": {
+      "grpc" : 8502
+     }
+ }

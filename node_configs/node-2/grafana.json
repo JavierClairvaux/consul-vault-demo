@@ -1,0 +1,10 @@
+{
+  "service": {
+    "name": "grafana",
+    "port": 3000,
+    "check": {
+      "args": ["nc", "-zv", "localhost", "3000" ],
+      "interval": "10s"
+    }
+  }
+}

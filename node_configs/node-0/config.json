@@ -1,0 +1,39 @@
+{
+    "bootstrap_expect": 3,
+    "client_addr": "0.0.0.0",
+    "node_name" : "consul-node0",
+    "bind_addr": "0.0.0.0",
+    "datacenter": "dc-0",
+    "data_dir": "/opt/consul",
+    "domain": "consul",
+    "enable_script_checks": true,
+    "dns_config": {
+        "enable_truncate": true,
+        "only_passing": true
+    },
+    "enable_syslog": true,
+    "encrypt": "EV0be+9N8kaJca9EddKJTCgO/cj6HZqfhkMMgzzAQjQ=",
+    "leave_on_terminate": true,
+    "rejoin_after_leave": true,
+    "server": true,
+    "ui": true,
+    "connect": {
+       "enabled": true
+    },
+    "ports": {
+      "grpc" : 8502
+     },
+    "advertise_addr": "192.168.9.91",
+    "advertise_addr_wan": "192.168.9.91",
+    "retry_join": [
+        "192.168.9.91",
+        "192.168.9.92",
+        "192.168.9.93"
+      ],
+    "log_level": "DEBUG",
+    "enable_central_service_config": true,
+    "telemetry": {
+       "dogstatsd_addr": "localhost:8125",
+       "disable_hostname": true
+    }
+  }
