@@ -67,25 +67,6 @@ server=/consul/127.0.0.1#8600
 " | sudo tee /etc/dnsmasq.d/10-consul
 
 sudo systemctl restart dnsmasq
-echo $dcfolder
-
-consul config write /vagrant/central_config/consul/payment-defaults.hcl
-
-#install docker
-sudo apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common -y
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get install docker-ce docker-ce-cli containerd.io -y
-
 
 # #Install influxdb
 # sudo curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
@@ -97,29 +78,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io -y
 # sudo apt install influxdb-client
 # influx -execute "create database telegraf
 # create user telegraf with password 'pass'"
-
-#Install telegraf
-cat <<EOF | sudo tee /etc/apt/sources.list.d/influxdata.list
-deb https://repos.influxdata.com/ubuntu bionic stable
-EOF
-sudo curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
-sudo apt-get update
-sudo apt-get -y install telegraf
-cd /home/vagrant
-cd /etc/telegraf/
-sudo cp /vagrant/telegraf/telegraf.conf .
-sudo mv telegraf.conf telegraf.conf.default
-sudo cp /vagrant/telegraf/telegraf.conf .
-sudo systemctl start telegraf
-
-#Install prometheus
-cd /home/vagrant
-mkdir tmp
-cd tmp/
-cp /vagrant/prometheus/$nodefolder/prometheus.yml .
-sudo docker run -d --network host -v $(pwd):/etc/prometheus/ --name prometheus prom/prometheus
-sudo systemctl restart telegraf
-
+#
 #Install grafana
 cd /home/vagrant
 sudo apt-get install -y software-properties-common
