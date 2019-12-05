@@ -1,7 +1,7 @@
 {
   "server": false,
-  "node_name" : "vault-client0",
-  "bind_addr": "192.168.10.121",
+  "node_name" : "vault-client3",
+  "bind_addr": "192.168.10.124",
   "datacenter": "dc-0",
   "data_dir": "/opt/consul",
   "domain": "consul",
@@ -12,13 +12,9 @@
   "log_level": "DEBUG",
   "rejoin_after_leave": true,
   "start_join": [
-      "192.168.9.91"
+      "192.168.9.92"
   ],
   "ports": {
       "grpc" : 8502
-    },
-  "telemetry": {
-    "dogstatsd_addr": "localhost:8125",
-    "disable_hostname": true
+     }
  }
-}
