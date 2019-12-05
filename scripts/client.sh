@@ -1,33 +1,22 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 clientfolder=$1;
 
+IFS='-'
+read -ra ADDR <<< "$clientfolder"
+i="${ADDR[1]}"
+IFS=' '
 sudo apt-get update -y
 sudo apt-get install unzip -y
 sudo apt-get install dnsmasq -y
-# sudo apt-get install \
-#     apt-transport-https \
-#     ca-certificates \
-#     curl \
-#     gnupg-agent \
-#     software-properties-common -y
-# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-# sudo apt-key fingerprint 0EBFCD88
-# sudo add-apt-repository \
-#    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-#    $(lsb_release -cs) \
-#    stable"
-# sudo apt-get install docker-ce docker-ce-cli containerd.io -y
-# sudo groupadd docker
-# sudo usermod -aG docker $USER
-# newgrp docker
+
 # Install consul
 sudo wget -q https://cab-consul.s3.us-east-2.amazonaws.com/consul
 chmod +x consul
 sudo mv consul /usr/local/bin
 sudo mkdir -p /etc/consul.d/scripts
 
-  # creating consul user
+# creating consul user
 sudo useradd --system --home /etc/consul.d --shell /bin/false consul
 sudo mkdir -p /opt/consul
 sudo chown --recursive consul:consul /opt/consul
@@ -86,43 +75,85 @@ server=/consul/127.0.0.1#8600
 " | sudo tee /etc/dnsmasq.d/10-consul
 
 sudo systemctl restart dnsmasq
+if [ $i -lt 3 ]
+then
+  #Install vault
+  echo "INSTALLING VAULT"
 
-#Install vault
-echo "installing vault"
+  cd /usr/local/bin
+  sudo wget -q https://releases.hashicorp.com/vault/1.3.0/vault_1.3.0_linux_amd64.zip
+  sudo unzip vault_1.3.0_linux_amd64.zip
+  sudo rm vault_1.3.0_linux_amd64.zip
+  sudo chmod +x vault
+  vault -autocomplete-install
+  complete -C /usr/local/bin/vault vault
+  sudo setcap cap_ipc_lock=+ep /usr/local/bin/vault
+  sudo useradd --system --home /etc/vault.d --shell /bin/false vault
+  echo '[Unit]
+  Description=Vault secret management tool
+  Requires=network-online.target
+  After=network-online.target
 
-cd /usr/local/bin
-sudo wget -q https://releases.hashicorp.com/vault/1.2.4/vault_1.2.4_linux_amd64.zip
-sudo unzip vault_1.2.4_linux_amd64.zip
-sudo rm vault_1.2.4_linux_amd64.zip
-chmod +x vault
-vault -autocomplete-install
-complete -C /usr/local/bin/vault vault
-sudo setcap cap_ipc_lock=+ep /usr/local/bin/vault
-sudo useradd --system --home /etc/vault.d --shell /bin/false vault
-echo '[Unit]
-Description=Vault secret management tool
-Requires=network-online.target
-After=network-online.target
+  [Service]
+  User=vault
+  Group=vault
+  PIDFile=/var/run/vault/vault.pid
+  ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl -log-level=debug
+  ExecReload=/bin/kill -HUP $MAINPID
+  KillMode=process
+  KillSignal=SIGTERM
+  Restart=on-failure
+  RestartSec=42s
+  LimitMEMLOCK=infinity
 
-[Service]
-User=vault
-Group=vault
-PIDFile=/var/run/vault/vault.pid
-ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl -log-level=debug
-ExecReload=/bin/kill -HUP $MAINPID
-KillMode=process
-KillSignal=SIGTERM
-Restart=on-failure
-RestartSec=42s
-LimitMEMLOCK=infinity
+  [Install]
+  WantedBy=multi-user.target' | sudo tee /etc/systemd/system/vault.service
 
-[Install]
-WantedBy=multi-user.target' | sudo tee /etc/systemd/system/vault.service
+  sudo systemctl daemon-reload
+  sudo mkdir --parents /etc/vault.d
+  sudo cp /vagrant/vault/$clientfolder/vault.hcl /etc/vault.d/vault.hcl
+  sudo chown --recursive vault:vault /etc/vault.d
+  sudo chmod 640 /etc/vault.d/vault.hcl
+  sudo systemctl start vault
+  export VAULT_ADDR=http://127.0.0.1:8200
 
-sudo systemctl daemon-reload
-sudo mkdir --parents /etc/vault.d
-sudo cp /vagrant/vault/$clientfolder/vault.hcl /etc/vault.d/vault.hcl
-sudo chown --recursive vault:vault /etc/vault.d
-sudo chmod 640 /etc/vault.d/vault.hcl
-sudo systemctl start vault
-export VAULT_ADDR=http://127.0.0.1:8200
+  #Install telegraf
+  curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+  source /etc/lsb-release
+  echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+  sudo apt-get update && sudo apt-get install telegraf
+  sudo rm  /etc/telegraf/telegraf.conf
+  sudo cp /vagrant/telegraf/telegraf.conf  /etc/telegraf/
+
+  sudo systemctl start telegraf
+  sleep 5
+  sudo systemctl restart telegraf
+
+else
+  echo "installing influxdb"
+  sudo apt-get install \
+      apt-transport-https \
+      ca-certificates \
+      curl \
+      gnupg-agent \
+      software-properties-common -y
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  sudo apt-key fingerprint 0EBFCD88
+  sudo add-apt-repository \
+     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+     $(lsb_release -cs) \
+     stable"
+  sudo apt-get install docker-ce docker-ce-cli containerd.io -y
+
+  #Install influxdb
+  sudo curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+  source /etc/lsb-release
+  echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+  sudo apt-get update
+  sudo apt-get install influxdb -y
+  sudo systemctl start influxd
+  sudo apt install influxdb-client
+  influx -execute "create database telegraf create user telegraf with password 'pass'"
+
+  sudo docker run -d --network host --name influxdb-proxy javier1/consul-envoy -sidecar-for influxdb
+fi
