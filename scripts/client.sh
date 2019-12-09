@@ -7,7 +7,7 @@ read -ra ADDR <<< "$clientfolder"
 i="${ADDR[1]}"
 IFS=' '
 sudo apt-get update -y
-sudo apt-get install unzip -y
+sudo apt-get install jq unzip -y
 sudo apt-get install dnsmasq -y
 
 # Install consul
@@ -75,7 +75,7 @@ server=/consul/127.0.0.1#8600
 " | sudo tee /etc/dnsmasq.d/10-consul
 
 sudo systemctl restart dnsmasq
-if [ $i -lt 3 ]
+if [ $i -lt 2 ]
 then
   #Install vault
   echo "INSTALLING VAULT"
@@ -115,7 +115,6 @@ then
   sudo chown --recursive vault:vault /etc/vault.d
   sudo chmod 640 /etc/vault.d/vault.hcl
   sudo systemctl start vault
-  export VAULT_ADDR=http://127.0.0.1:8200
 
   #Install telegraf
   curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
@@ -129,8 +128,32 @@ then
   sleep 5
   sudo systemctl restart telegraf
 
-else
+elif [ $i -eq 2 ]
+then
+  echo "INSTALLING POSTGRES"
+  #install docker
+  sudo apt-get install \
+      apt-transport-https \
+      ca-certificates \
+      curl \
+      gnupg-agent \
+      software-properties-common -y
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  sudo apt-key fingerprint 0EBFCD88
+  sudo add-apt-repository \
+     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+     $(lsb_release -cs) \
+     stable"
+  sudo apt-get install docker-ce docker-ce-cli containerd.io -y
+
+  sudo docker run -d --network host -e POSTGRES_DB=myapp -e POSTGRES_USER=vault -e POSTGRES_PASSWORD=secret --name postgres postgres
+  sudo docker run -d --network host --name postgres-proxy javier1/consul-envoy -sidecar-for postgres
+  sudo docker exec postgres psql -U vault -c "CREATE ROLE app;" myapp
+
+elif [ $i -eq 3 ]
+then
   echo "installing influxdb"
+  ##Install docker
   sudo apt-get install \
       apt-transport-https \
       ca-certificates \
@@ -156,4 +179,10 @@ else
   influx -execute "create database telegraf create user telegraf with password 'pass'"
 
   sudo docker run -d --network host --name influxdb-proxy javier1/consul-envoy -sidecar-for influxdb
+
+elif [ $i -eq 4 ]
+then
+  cd /home/vagrant
+  sudo cp /vagrant/traffic-gen/traffic-generator.sh .
+  sudo apt-get install postgresql-client -y
 fi
