@@ -1,7 +1,7 @@
 {
     "bootstrap_expect": 3,
     "client_addr": "0.0.0.0",
-    "node_name" : "consul-node0",
+    "node_name" : "node0",
     "bind_addr": "0.0.0.0",
     "datacenter": "dc-0",
     "data_dir": "/opt/consul",
