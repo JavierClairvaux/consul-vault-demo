@@ -1,7 +1,7 @@
 {
   "server": false,
-  "node_name" : "influx-client",
-  "bind_addr": "192.168.10.124",
+  "node_name" : "traffic-generator",
+  "bind_addr": "192.168.10.125",
   "datacenter": "dc-0",
   "data_dir": "/opt/consul",
   "domain": "consul",

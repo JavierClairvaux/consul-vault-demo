@@ -1,0 +1,15 @@
+{
+  "service": {
+    "name": "postgres",
+    "port": 8006,
+    "check": {
+      "args": ["nc", "-zv", "localhost", "5432" ],
+      "interval": "10s"
+    },
+    "connect": {
+      "sidecar_service": {
+        "port": 20001
+      }
+    }
+  }
+}

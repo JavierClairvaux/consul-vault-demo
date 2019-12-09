@@ -1,6 +1,6 @@
 {
   "server": false,
-  "node_name" : "vault-client2",
+  "node_name" : "postgres-client",
   "bind_addr": "192.168.10.123",
   "datacenter": "dc-0",
   "data_dir": "/opt/consul",
