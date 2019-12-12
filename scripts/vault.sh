@@ -1,6 +1,8 @@
 #Run on a vault instance after unsealing
 export VAULT_ADDR=http://127.0.0.1:8200
 
+#Initialize vault and unseal it
+vault operator init
 
 #Login as root
 vault login <ROOT_TOKEN>
