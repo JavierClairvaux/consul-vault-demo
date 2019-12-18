@@ -7,7 +7,7 @@ sudo apt-get install unzip -y
 sudo apt-get install dnsmasq -y
 
 cd /usr/local/bin
-sudo curl -o consul.zip https://releases.hashicorp.com/consul/1.6.1/consul_1.6.1_linux_amd64.zip
+sudo curl -s -o consul.zip https://releases.hashicorp.com/consul/1.6.1/consul_1.6.1_linux_amd64.zip
 sudo unzip consul.zip
 sudo rm -f consul.zip
 sudo mkdir -p /etc/consul.d/scripts
